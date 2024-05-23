@@ -1,0 +1,35 @@
+
+
+# Metadata of record,relation and page 
+
+struct RecordHeader {
+    int recordID;
+    int offset;
+}; 
+
+struct PageHeader {
+    int pageNumber;
+    int recordCount;
+};
+
+struct FileHeader {
+    int numberOfPages;
+    char typeName[12]; #Because relation names' length limit is 12
+};
+
+
+# Limitations 
+
+Each relation has a folder with the same name, in that folder we have 
+
+* index.py # for index structure 
+
+* page0.txt-page9.txt #initially each relation have 10 pages in their file with each storing 10 records.
+
+* each folder initially have 1 page but it is of varying length with respect to need. 
+
+* relations have at most 10 fields each field name is of 20 chars length. 
+
+* relation names up to 12 chars length is supported.
+
+
