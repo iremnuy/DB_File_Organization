@@ -56,12 +56,22 @@ def process_search_record(params):
     status = "success" if result == 0 else "failure"
     log_operation(f"search record {' '.join(params)}", status)
     return status
+def process_list_records(params):
+    type_name = params[0]
+    if not os.path.exists(type_name):
+        log_operation(f"list records {' '.join(params)}", "failure")
+        return "failure"
+    # Delegate to the relation's index.py
+    result = os.system(f"python3 {os.path.join(type_name, 'index.py')} list_records ")
+    status = "success" if result == 0 else "failure"
+    log_operation(f"list all records {' '.join(params)}", status)
+    return status
 
 def main(input_file):
     with open(input_file, 'r') as file:
         commands = file.readlines()
 
-    with open('output.txt', 'w') as output_file:
+    #with open('output.txt', 'w') as output_file:
         print("Processing commands...",commands)
         for command in commands:
             parts = command.strip().split()
@@ -75,13 +85,15 @@ def main(input_file):
                 result = process_delete_record(params[1:])
             elif operation == "search" and params[0] == "record":
                 result = process_search_record(params[1:])
+            elif operation == "list" and params[0] == "records":
+                result = process_list_records(params[1:])
             else:
                 result = "failure"
             #if there is a new line at the end of the command then remove it
             if command[-1] == '\n':
                 command = command[:-1]
-            result= command + " " + result  
-            output_file.write(result + '\n')
+            #result= command + " " + result  
+           # output_file.write(result + '\n')
 
 if __name__ == "__main__":
     # for every run first delete log file,folders inside the directory and output file

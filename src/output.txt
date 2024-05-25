@@ -1,8 +1,4 @@
-create type human 6 1 name str origin str title str age int weapon str skill str  success
-create record human RamsayBolton Dreadfort Lord 21 Dagger Strategy success
-create type dragon 5 1 name str age int color str owner str skill str success
-create record dragon Viserion 5 White NightKing IceBreathing success
-create record human Bronn Stokeworth Knight 32 Crossbow Swordfighting  success
-delete record human NedStark failure
-search record human RamsayBolton success
-search record dragon Viserion success
+('RamsayBolton', ['RamsayBolton', 'Dreadfort', 'Lord', '21', 'Dagger', 'Strategy'])
+('Viserion', ['Viserion', '5', 'White', 'NightKing', 'IceBreathing'])
+('Bronn', ['Bronn', 'Stokeworth', 'Knight', '32', 'Crossbow', 'Swordfighting'])
+('Bronn', ['Bronn', 'Stokeworth', 'Knight', '32', 'Crossbow', 'Swordfighting'])

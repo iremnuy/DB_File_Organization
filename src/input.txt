@@ -6,3 +6,8 @@ create record human Bronn Stokeworth Knight 32 Crossbow Swordfighting
 delete record human NedStark
 search record human RamsayBolton
 search record dragon Viserion
+list records human
+search record human Bronn
+delete record human RamsayBolton
+search record human RamsayBolton
+search record human Bronn

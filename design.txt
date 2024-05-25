@@ -24,7 +24,7 @@ Each relation has a folder with the same name, in that folder we have
 
 * index.py # for index structure 
 
-* page0.txt-page9.txt #initially each relation have 10 pages in their file with each storing 10 records.
+* page0.txt-page9.txt #initially each relation have 10 pages in their file with each page storing 10 records.
 
 * each folder initially have 1 page but it is of varying length with respect to need. 
 
