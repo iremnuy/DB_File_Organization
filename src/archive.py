@@ -79,5 +79,13 @@ def main(input_file):
             output_file.write(result + '\n')
 
 if __name__ == "__main__":
+    # for every run first delete log file,folders inside the directory and output file
+    if os.path.exists('log.csv'):
+        os.remove('log.csv')
+    if os.path.exists('output.txt'):
+        os.remove('output.txt')
+    for folder in os.listdir():
+        if os.path.isdir(folder):
+            shutil.rmtree(folder)
     input_file = sys.argv[1]
     main(input_file)

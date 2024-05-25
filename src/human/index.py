@@ -152,7 +152,7 @@ if __name__ == "__main__":
     operation = sys.argv[1]
     relation_dir = os.path.dirname(__file__)
     schema = get_schema(relation_dir)
-    primary_key_index = int(schema[1])-1 
+    primary_key_index = schema[1]-1 
     primary_key_type = schema[3 + 2 * int(primary_key_index)]
     print("Primary key type : ", primary_key_type , "Primary key index: ", primary_key_index)
 
