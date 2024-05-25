@@ -62,6 +62,7 @@ def main(input_file):
         commands = file.readlines()
 
     with open('output.txt', 'w') as output_file:
+        print("Processing commands...",commands)
         for command in commands:
             parts = command.strip().split()
             operation = parts[0]
@@ -75,7 +76,11 @@ def main(input_file):
             elif operation == "search" and params[0] == "record":
                 result = process_search_record(params[1:])
             else:
-                result = commands + " failure"
+                result = "failure"
+            #if there is a new line at the end of the command then remove it
+            if command[-1] == '\n':
+                command = command[:-1]
+            result= command + " " + result  
             output_file.write(result + '\n')
 
 if __name__ == "__main__":
