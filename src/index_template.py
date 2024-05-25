@@ -254,8 +254,8 @@ def delete_record(relation_dir, key):
         for i in range(record_index, len(records)): 
             updated_pointer = (page_number, i) #pointer points to page number and record index
             record_key = records[i][0] 
-            tree.delete(record_key)  # Remove the old pointer
-            tree.insert(record_key, updated_pointer)  # Insert the updated pointer
+            tree.delete(record_key)  # first delete the old pointer to the record in that page
+            tree.insert(record_key, updated_pointer)  # insert the updated pointer to the record in that page
         
         save_tree(tree, relation_dir)
         return True
