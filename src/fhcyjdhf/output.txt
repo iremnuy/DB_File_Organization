@@ -1,0 +1,6 @@
+Searched record: with index 5 
+Searched record: with index 2 
+Searched record: with index 5 
+Searched record: with index 4 
+Searched record: with index 0 
+Searched record: with index 8 

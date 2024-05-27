@@ -1,1 +1,0 @@
-5 1 name str age int color str owner str skill str
