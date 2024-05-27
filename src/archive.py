@@ -102,13 +102,14 @@ def main(input_file):
 
 if __name__ == "__main__":
      # TODO : do not delete log.csv only delete output.txt on each run , also dont delete type folders , done 
-    if os.path.exists('output.txt'):
+    if os.path.exists('output.txt'): #ONLY DELETE OUTPUT ON EACH RUN 
         os.remove('output.txt') #remove the output file if it exists
-        
+    """  #DO NOT DELETE FOLDERS THEY SHOULD PERSIST
     for folder in os.listdir():
         if os.path.isdir(folder): #if folders name is not testCase then delete it
             if folder != "testCase":
                 shutil.rmtree(folder) 
+                """
             
     input_file = sys.argv[1]
     main(input_file)

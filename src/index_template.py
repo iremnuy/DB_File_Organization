@@ -14,29 +14,42 @@ class BPlusTree:
         self.max_keys = max_keys
 
     def search(self, key):
-        print("searching key: ", key)
+        #print("searching key: ", key)
         current_node = self.root
-        #if the searched key is from a different type do not search and retrun none 
-        #if current node is null return none directly 
         try:
             while not current_node.is_leaf:
                 i = 0
                 while i < len(current_node.keys) and key >= current_node.keys[i]:
+                    #print(f"Comparing {key} with {current_node.keys[i]}")
+                    #print("current node childrens: ", current_node.children)
+                    """
+                    if key == current_node.keys[i]:
+                        return current_node.children[i] #it does not return the correct info 
+                        """       
+                    for i, item in enumerate(current_node.keys):
+                        #print("item is ", item)
+                        #print("key is ", key)
+                        if item == key:
+                            #print("found the key: ", key)
+                            return current_node.children[i]
                     i += 1
+                #print("current node keys: ", current_node.keys,"i is ", i)
+                #print("current node children: ", current_node.children)
                 current_node = current_node.children[i]
-
+            
             for i, item in enumerate(current_node.keys):
-                print("item is ", item)
-                print("key is ", key)
+                #print("item is ", item)
+                #print("key is ", key)
                 if item == key:
+                    #print("found the key: ", key)
                     return current_node.children[i]
             return None
         except Exception as e:
-            print("Error for key : ", e)
+            #print("Error for key : ", e)
             return None #key type error, or empty tree
 
     def insert(self, key, record_pointer):
-        print("inserting key: ", key)
+        #print("inserting key: ", key)
         root = self.root
         if len(root.keys) == self.max_keys:
             new_root = BPlusTreeNode(is_leaf=False)
@@ -45,22 +58,42 @@ class BPlusTree:
             self.root = new_root
 
         self.insert_non_full(self.root, key, record_pointer)
-
+    """
     def insert_non_full(self, node, key, record_pointer):
         if node.is_leaf:
             i = len(node.keys) - 1
             node.keys.append(None)
             node.children.append(None)
             while i >= 0 and key < node.keys[i]:
-                print("node.keys[i] is ", node.keys[i])
-                print("node.keys[i+1] is ", node.keys[i+1])
-                print("node.children list is ", node.children)
                 node.keys[i+1] = node.keys[i] 
                 node.children[i+1] = node.children[i] 
                 i -= 1
             node.keys[i+1] = key
-            print("i is ", i)
+            #print("i is ", i)
             node.children[i+1] = record_pointer #gives index out of range error for 4,4
+        else:
+            i = len(node.keys) - 1
+            while i >= 0 and key < node.keys[i]:
+                i -= 1
+            i += 1
+            if len(node.children[i].keys) == self.max_keys:
+                self.split_child(node, i, node.children[i])
+                if key > node.keys[i]:
+                    i += 1
+            self.insert_non_full(node.children[i], key, record_pointer)
+            """
+    def insert_non_full(self, node, key, record_pointer):
+        if node.is_leaf:
+            i = len(node.keys) - 1
+            node.keys.append(None)
+            while len(node.children) < len(node.keys):
+                node.children.append(None)
+            while i >= 0 and key < node.keys[i]:
+                node.keys[i + 1] = node.keys[i]
+                node.children[i + 1] = node.children[i]
+                i -= 1
+            node.keys[i + 1] = key
+            node.children[i + 1] = record_pointer
         else:
             i = len(node.keys) - 1
             while i >= 0 and key < node.keys[i]:
@@ -110,7 +143,7 @@ class BPlusTree:
             else:
                 # Key is in a child node
                 if self.delete_from_node(node.children[index], key):
-                    # Handle underflow
+                    # underflow
                     if len(node.children[index].keys) < self.max_keys // 2:
                         self.handle_underflow(node, index)
                     return True
@@ -216,11 +249,10 @@ def is_page_full(page_file, max_records_per_page):
     return len(records) >= max_records_per_page
 
 def insert_record(relation_dir, key, record):
-    print("inserting key : ", key)
     tree = load_tree(relation_dir)
     #searching the tree to prevent duplicate keys
     if tree.search(key):
-        print("Key already exists", key)
+        #print("Key already exists", key)
         return False
     page_count = len([f for f in os.listdir(relation_dir) if f.startswith('page')])
     page_file = os.path.join(relation_dir, f'page{page_count}.dat')
@@ -241,14 +273,14 @@ def insert_record(relation_dir, key, record):
     records.append((key, record))
     with open(page_file, 'wb') as f:
         pickle.dump(records, f)
-    print("inserting record into tree: ", (key, record))
+    #print("inserting record into tree: ", (key, record))
     tree.insert(key, (page_count, len(records) - 1)) #insert the key and the pointer to the record in the B+ Tree
     save_tree(tree, relation_dir) 
     return True
 
 def search_record(relation_dir, key):
     tree = load_tree(relation_dir)
-    result = tree.search(key)
+    result = tree.search(key) #search the tree for the page and offset info 
     if result:
         #print("found the guy in the tree")
         page_number, record_index = result #find the page number and record index of the searched record 
@@ -256,29 +288,21 @@ def search_record(relation_dir, key):
         page_file = os.path.join(relation_dir, f'page{page_number}.dat')
         with open(page_file, 'rb') as f:
             records = pickle.load(f)
-        file_path = os.path.join(relation_dir, 'output.txt')
-        with open(file_path, 'a') as f:
-            #wrote the searched record to the file
-            f.write(f"""Searched record: with index {record_index} \n""")
-            f.close()
         return records[record_index] #bug: after deletion this index becomes out of range
+        #stored as (key, record) in the page file so first index is the key
     return None
 
 def delete_record(relation_dir, key):
     tree = load_tree(relation_dir)
     result = tree.search(key)
-    if result:
+    if result: 
+        #print("found the guy in the tree, dleete it soon key is ",key)
+        #print("result is ", result)
         page_number, record_index = result #deleted records page and index info 
         page_file = os.path.join(relation_dir, f'page{page_number}.dat')
         with open(page_file, 'rb') as f:
             records = pickle.load(f)
         del records[record_index] #delete from pickle file 
-        with open(__file__, 'a') as f:
-            #wrote the deleted record to the file
-            file_path = os.path.join(relation_dir, 'output.txt')
-            with open(file_path, 'a') as f:
-                f.write(f"""Deleted record: with index {record_index} \n""")
-                f.close()
         with open(page_file, 'wb') as f:
             pickle.dump(records, f) 
         tree.delete(key)
@@ -289,7 +313,7 @@ def delete_record(relation_dir, key):
             record_key = records[i][0] 
             tree.delete(record_key)  # first delete the old pointer to the record in that page
             save_tree(tree, relation_dir)
-            print("updated pointer: ", updated_pointer)
+            #print("updated pointer: ", updated_pointer)
             tree.insert(record_key, updated_pointer)  # insert the updated pointer to the record in that page
         
         save_tree(tree, relation_dir)
@@ -317,12 +341,12 @@ if __name__ == "__main__":
     schema = get_schema(relation_dir)
     primary_key_index = int(schema[1])-1 
     primary_key_type = schema[3 + 2 * int(primary_key_index)]
-    print("Operation : ", operation)
-    print("Primary key type : ", primary_key_type , "Primary key index: ", primary_key_index)
+    #print("Operation : ", operation)
+    #print("Primary key type : ", primary_key_type , "Primary key index: ", primary_key_index)
     record = sys.argv[2:]
-    print("record: ", record)
+    #print("record: ", record)
     record = sys.argv[2:]
-    print("record: ", record)
+    #print("record: ", record)
     if operation == "create_record":
         #primary_key_value = sys.argv[2]
         primary_key_value = record[primary_key_index]
@@ -330,7 +354,7 @@ if __name__ == "__main__":
             primary_key_value = int(primary_key_value) #böyle yapmazsak string comparison yapıyor,search yanlış dönüyor 
             
         
-        print("primary key value: ", primary_key_value) #records indexth index must be the key stated in schema 
+        #print("primary key value: ", primary_key_value) #records indexth index must be the key stated in schema 
         success = insert_record(relation_dir, primary_key_value, record)
         sys.exit(0 if success else 1)
     elif operation == "search_record":
@@ -340,13 +364,13 @@ if __name__ == "__main__":
             
         #records first index must be the key stated in schema
         
-        print("primary key value for search: ", primary_key_value)
+        #print("primary key value for search: ", primary_key_value)
         record = search_record(relation_dir, primary_key_value)
         if record:
             #print(record) #TODO: to be written to output file
             #file is already open by another process
             output_file = open('output.txt', 'a')   
-            output_file.write(str(record)+ '\n')
+            output_file.write(str(' '.join(record[1])+ '\n'))
 
             output_file.close() #there are also other processes that are using the file
             sys.exit(0)
@@ -358,11 +382,11 @@ if __name__ == "__main__":
             primary_key_value = int(primary_key_value)
             
         
-        print("primary key value for delete: ", primary_key_value)
+        #("primary key value for delete: ", primary_key_value)
         success = delete_record(relation_dir, primary_key_value)
         sys.exit(0 if success else 1)
     elif operation == "list_records": #for me, to list all records in the relation
-        print("Listing all records...")
+        #print("Listing all records...")
         records = list_all_records(relation_dir)
         for record in records:
             print(record)

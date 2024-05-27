@@ -1,5 +1,0 @@
-Searched record: with index 0 
-Searched record: with index 3 
-Searched record: with index 0 
-Searched record: with index 2 
-Searched record: with index 4 

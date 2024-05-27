@@ -1,35 +1,61 @@
 
+** How to run the code 
 
-# Metadata of record,relation and page 
+> 
 
-struct RecordHeader {
-    int recordID;
-    int offset;
-}; 
 
-struct PageHeader {
-    int pageNumber;
-    int recordCount;
-};
 
-struct FileHeader {
-    int numberOfPages;
-    char typeName[12]; #Because relation names' length limit is 12
-};
+
+I implemented a B plus tree to speed up the search which is based on primary key search.For key based searches we learned that 
+B+ tree structure is advantageous in terms of speed but has limitations in deletion and insertion operations,
+for our case since insertion has one time occurence (because history does not change) and deletion is not a frequent operation at all 
+I prioritizied search speed with applying a tree structure.
 
 
 # Limitations 
 
 Each relation has a folder with the same name, in that folder we have 
 
-* index.py # for index structure 
+* index.py # for index structure of that relation , index structure is stored in index.pkl file 
 
-* page0.txt-page9.txt #initially each relation have 10 pages in their file with each page storing 10 records.
+* page0.txt-page9.txt #for pages of the relation,each page has up to 10 records, page is created when the previous page is full 
 
-* each folder initially have 1 page but it is of varying length with respect to need. 
+* each folder initially have 1 page 
 
 * relations have at most 10 fields each field name is of 20 chars length. 
 
-* relation names up to 12 chars length is supported.
+* Maximum length of a relation name is 12
+
+* Maximimum length of a field for relation is 20
+
+* Maximum number of fields a type can have is 10
+
+* Each file can have up to 100 pages
+
+
+* each node in the B plus tree is stored as a tuple of page_number,record_index , so for records we store in the 
+index.pkl page and offset information.
+
+*for each page, we use page number info to get the right page, each page is stored as a seperate file in file system under the 
+folder with the same name with the relation 
+
+*for each relation I store a directory name to reach that relation's data, in that folder I have index's pickle file 
+to speed up the search for the tuples.
+
+*disk data of relations is stored in page{number}.dat files with their all records, when I get the page number information 
+from index.pkl file,I direct the search into that specific dat file. 
+
+
+** Disclaimer , Problems
+
+* I could not conduct search for some edge cases when primary key is of type string
+
+*Also due to my decision of using a tree, deletion operation takes time and it took me days to properly implement it 
+
+
+
+** Lessons learned
+
+*Do not use a B plus tree structure unless it is explicitly required so.
 
 

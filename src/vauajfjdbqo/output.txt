@@ -1,5 +1,0 @@
-Deleted record: with index 1 
-Searched record: with index 4 
-Searched record: with index 3 
-Searched record: with index 3 
-Deleted record: with index 2 

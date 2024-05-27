@@ -1,8 +1,0 @@
-Deleted record: with index 0 
-Searched record: with index 1 
-Searched record: with index 2 
-Searched record: with index 4 
-Searched record: with index 5 
-Searched record: with index 5 
-Deleted record: with index 8 
-Deleted record: with index 8 

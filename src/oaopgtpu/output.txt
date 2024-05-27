@@ -1,2 +1,0 @@
-Searched record: with index 6 
-Deleted record: with index 7 
