@@ -1,4 +1,2 @@
-('RamsayBolton', ['RamsayBolton', 'Dreadfort', 'Lord', '21', 'Dagger', 'Strategy'])
-('Viserion', ['Viserion', '5', 'White', 'NightKing', 'IceBreathing'])
-('Bronn', ['Bronn', 'Stokeworth', 'Knight', '32', 'Crossbow', 'Swordfighting'])
-('Bronn', ['Bronn', 'Stokeworth', 'Knight', '32', 'Crossbow', 'Swordfighting'])
+RamsayBolton Dreadfort Lord 21 Dagger Strategy
+Viserion 5 White NightKing IceBreathing

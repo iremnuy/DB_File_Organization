@@ -1,15 +1,18 @@
 import os
 import pickle
 import sys
+import math
 
 class BPlusTreeNode:
     def __init__(self, is_leaf=True):
         self.is_leaf = is_leaf
-        self.keys = [] #for internal nodes this will direct the search to the correct child, for leaf nodes, it will be the key value
+        self.keys = []
         self.children = []
+        self.parent = None
+        self.next_node = None
 
 class BPlusTree:
-    def __init__(self, max_keys=4): 
+    def __init__(self, max_keys=4):
         self.root = BPlusTreeNode()
         self.max_keys = max_keys
 
@@ -42,11 +45,11 @@ class BPlusTree:
             node.keys.append(None)
             node.children.append(None)
             while i >= 0 and key < node.keys[i]:
-                node.keys[i+1] = node.keys[i]
-                node.children[i+1] = node.children[i]
+                node.keys[i + 1] = node.keys[i]
+                node.children[i + 1] = node.children[i]
                 i -= 1
-            node.keys[i+1] = key
-            node.children[i+1] = record_pointer
+            node.keys[i + 1] = key
+            node.children[i + 1] = record_pointer
         else:
             i = len(node.keys) - 1
             while i >= 0 and key < node.keys[i]:
@@ -66,14 +69,20 @@ class BPlusTree:
 
         new_node.keys = child.keys[mid + 1:]
         new_node.children = child.children[mid + 1:]
+        if not child.is_leaf:
+            for ch in new_node.children:
+                ch.parent = new_node
 
         child.keys = child.keys[:mid]
         child.children = child.children[:mid + 1]
 
+        new_node.parent = parent
+        if child.is_leaf:
+            new_node.next_node = child.next_node
+            child.next_node = new_node
 
     def delete(self, key):
         self.delete_from_node(self.root, key)
-        # If the root is empty and has children, make the first child the new root
         if not self.root.keys and self.root.children:
             self.root = self.root.children[0]
 
@@ -88,12 +97,9 @@ class BPlusTree:
         else:
             index = self.find_key_index(node, key)
             if index < len(node.keys) and node.keys[index] == key:
-                # Key is in the internal node
                 return self.delete_from_internal_node(node, index)
             else:
-                # Key is in a child node
                 if self.delete_from_node(node.children[index], key):
-                    # Handle underflow
                     if len(node.children[index].keys) < self.max_keys // 2:
                         self.handle_underflow(node, index)
                     return True
@@ -107,11 +113,9 @@ class BPlusTree:
 
     def delete_from_internal_node(self, node, index):
         key = node.keys[index]
-        # Replace key with the largest key from the left subtree
         predecessor = self.get_predecessor(node, index)
         node.keys[index] = predecessor
         self.delete_from_node(node.children[index], predecessor)
-        # Handle underflow
         if len(node.children[index].keys) < self.max_keys // 2:
             self.handle_underflow(node, index)
         return True
@@ -124,13 +128,10 @@ class BPlusTree:
 
     def handle_underflow(self, node, index):
         if index > 0 and len(node.children[index - 1].keys) > self.max_keys // 2:
-            # Borrow from left sibling
             self.borrow_from_left(node, index)
         elif index < len(node.children) - 1 and len(node.children[index + 1].keys) > self.max_keys // 2:
-            # Borrow from right sibling
             self.borrow_from_right(node, index)
         else:
-            # Merge with sibling
             if index > 0:
                 self.merge_with_left(node, index)
             else:
@@ -168,7 +169,6 @@ class BPlusTree:
         child.keys.extend(right_sibling.keys)
         child.children.extend(right_sibling.children)
 
-
     def list_records(self):
         def traverse(node):
             if node.is_leaf:
@@ -180,6 +180,7 @@ class BPlusTree:
                 return records
 
         return traverse(self.root)
+
 def load_tree(relation_dir):
     index_file = os.path.join(relation_dir, 'index.pkl')
     if os.path.exists(index_file):
@@ -190,7 +191,6 @@ def load_tree(relation_dir):
 def save_tree(tree, relation_dir):
     index_file = os.path.join(relation_dir, 'index.pkl')
     with open(index_file, 'wb') as f:
-        print("saving tree")
         pickle.dump(tree, f)
 
 def is_page_full(page_file, max_records_per_page):
@@ -227,14 +227,11 @@ def search_record(relation_dir, key):
     tree = load_tree(relation_dir)
     result = tree.search(key)
     if result:
-        print("found the guy in the tree")
         page_number, record_index = result
-        print("page number: ", page_number, "record index: ", record_index, "key: ", key)
         page_file = os.path.join(relation_dir, f'page{page_number}.dat')
         with open(page_file, 'rb') as f:
             records = pickle.load(f)
-        print("hello",record_index)
-        return records[record_index] #bug: after deletion this index becomes out of range
+        return records[record_index] if record_index < len(records) else None
     return None
 
 def delete_record(relation_dir, key):
@@ -245,23 +242,20 @@ def delete_record(relation_dir, key):
         page_file = os.path.join(relation_dir, f'page{page_number}.dat')
         with open(page_file, 'rb') as f:
             records = pickle.load(f)
-        del records[record_index] #delete from pickle file 
+        del records[record_index]
         with open(page_file, 'wb') as f:
-            pickle.dump(records, f) 
+            pickle.dump(records, f)
         tree.delete(key)
-        # Update the record pointers in the B+ Tree
-        #records=pickle.load(open(page_file, 'rb')) #load the records from the page file
-        for i in range(record_index, len(records)): 
-            updated_pointer = (page_number, i) #pointer points to page number and record index
-            record_key = records[i][0] 
-            tree.delete(record_key)  # first delete the old pointer to the record in that page
-            tree.insert(record_key, updated_pointer)  # insert the updated pointer to the record in that page
-        
+        for i in range(record_index, len(records)):
+            updated_pointer = (page_number, i)
+            record_key = records[i][0]
+            tree.delete(record_key)
+            tree.insert(record_key, updated_pointer)
         save_tree(tree, relation_dir)
         return True
-        return True
     return False
-def list_all_records(relation_dir): #for me, to list the records in the relation
+
+def list_all_records(relation_dir):
     tree = load_tree(relation_dir)
     record_pointers = tree.list_records()
     records = []
@@ -269,7 +263,8 @@ def list_all_records(relation_dir): #for me, to list the records in the relation
         page_file = os.path.join(relation_dir, f'page{page_number}.dat')
         with open(page_file, 'rb') as f:
             page_records = pickle.load(f)
-        records.append(page_records[record_index])
+        if record_index < len(page_records):
+            records.append(page_records[record_index])
     return records
 
 def get_schema(relation_dir):
@@ -289,37 +284,49 @@ if __name__ == "__main__":
     if operation == "create_record":
         primary_key_value = sys.argv[2]
         if primary_key_type == 'int':
-            primary_key_value = int(primary_key_value)
+            try:
+                primary_key_value = int(primary_key_value)
+            except ValueError:
+                print(f"Error: Primary key value '{primary_key_value}' is not a valid integer.")
+                sys.exit(1)
         record = sys.argv[2:]
         success = insert_record(relation_dir, primary_key_value, record)
         sys.exit(0 if success else 1)
     elif operation == "search_record":
         primary_key_value = sys.argv[2]
         if primary_key_type == 'int':
-            primary_key_value = int(primary_key_value)
+            try:
+                primary_key_value = int(primary_key_value)
+            except ValueError:
+                print(f"Error: Primary key value '{primary_key_value}' is not a valid integer.")
+                sys.exit(1)
         record = search_record(relation_dir, primary_key_value)
         if record:
-            print(record) #TODO: to be written to output file
-            #file is already open by another process
-            output_file = open('output.txt', 'a')   
-            output_file.write(str(record)+ '\n')
-
-            output_file.close() #there are also other processes that are using the file
+            formatted_record = ' '.join(record[1])
+            print(formatted_record)  # To be written to output file
+            with open('output.txt', 'a') as output_file:
+                output_file.write(formatted_record + '\n')
             sys.exit(0)
         else:
             sys.exit(1)
     elif operation == "delete_record":
         primary_key_value = sys.argv[2]
         if primary_key_type == 'int':
-            primary_key_value = int(primary_key_value)
+            try:
+                primary_key_value = int(primary_key_value)
+            except ValueError:
+                print(f"Error: Primary key value '{primary_key_value}' is not a valid integer.")
+                sys.exit(1)
         success = delete_record(relation_dir, primary_key_value)
         sys.exit(0 if success else 1)
     elif operation == "list_records":
         print("Listing all records...")
         records = list_all_records(relation_dir)
-        for record in records:
-            print(record)
+        with open('output.txt', 'a') as output_file:
+            for record in records:
+                formatted_record = ' '.join(record[1])
+                print(formatted_record)
+                output_file.write(formatted_record + '\n')
         sys.exit(0)
-    
     else:
         sys.exit(1)
