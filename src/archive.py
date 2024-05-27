@@ -4,6 +4,11 @@ import sys
 import time
 import csv
 
+
+MAX_FIELDS = 10
+MAX_RELATION_NAME_LENGTH = 12
+MAX_FIELD_LENGTH = 20 #max length of a field name 
+
 def log_operation(operation, status):
     """"
     with open('log.csv', 'a') as log_file: #creates if it does not exist thanks to "a" for append 
@@ -16,9 +21,31 @@ def log_operation(operation, status):
         log_file.write(f"{int(time.time())}, {operation}, {status}\n")
 def process_create_type(params):
     type_name = params[0]
+    number_of_fields=int(params[1])
+
     if os.path.exists(type_name):
         log_operation(f"create type {' '.join(params)}", "failure")
         return "failure"
+    if len(type_name) > MAX_RELATION_NAME_LENGTH:
+        log_operation(f"create type {' '.join(params)}", "failure")
+        return "failure"
+    if number_of_fields > MAX_FIELDS :
+        log_operation(f"create type {' '.join(params)}", "failure")
+        return "failure"
+    fields = params[3:]
+    if len(fields) != number_of_fields * 2:
+        log_operation(f"create type {' '.join(params)}", "failure")
+        return "failure"
+    for i in range(0, len(fields), 2):
+        field_name = fields[i]
+        #print("field name", field_name)
+        if len(field_name) >  MAX_FIELD_LENGTH:
+            log_operation(f"create type {' '.join(params)}", "failure")
+            return "failure"
+    #print("number of fields", number_of_fields)
+    #print("type name", type_name)
+
+    
     os.makedirs(type_name)
     schema = ' '.join(params[1:])
     with open(os.path.join(type_name, 'schema.txt'), 'w') as schema_file:
@@ -77,7 +104,7 @@ def main(input_file):
         commands = file.readlines()
 
     #with open('output.txt', 'w') as output_file:
-        print("Processing commands...",commands)
+        #print("Processing commands...",commands)
         for command in commands:
             parts = command.strip().split()
             operation = parts[0]
