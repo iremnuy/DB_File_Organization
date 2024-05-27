@@ -5,10 +5,15 @@ import time
 import csv
 
 def log_operation(operation, status):
-    with open('log.csv', 'a') as log_file:
+    """"
+    with open('log.csv', 'a') as log_file: #creates if it does not exist thanks to "a" for append 
+
         writer = csv.writer(log_file)
         writer.writerow([int(time.time()), operation, status])
-
+        """
+    #instead open a log.txt file not csv, time will be unix time
+    with open('log.txt', 'a') as log_file:
+        log_file.write(f"{int(time.time())}, {operation}, {status}\n")
 def process_create_type(params):
     type_name = params[0]
     if os.path.exists(type_name):
@@ -96,13 +101,14 @@ def main(input_file):
            # output_file.write(result + '\n')
 
 if __name__ == "__main__":
-    # for every run first delete log file,folders inside the directory and output file
-    if os.path.exists('log.csv'):
-        os.remove('log.csv')
+     # TODO : do not delete log.csv only delete output.txt on each run , also dont delete type folders , done 
     if os.path.exists('output.txt'):
-        os.remove('output.txt')
+        os.remove('output.txt') #remove the output file if it exists
+        
     for folder in os.listdir():
-        if os.path.isdir(folder):
-            shutil.rmtree(folder)
+        if os.path.isdir(folder): #if folders name is not testCase then delete it
+            if folder != "testCase":
+                shutil.rmtree(folder) 
+            
     input_file = sys.argv[1]
     main(input_file)

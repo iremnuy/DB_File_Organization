@@ -1,35 +1,80 @@
+# Design Document
 
+## Metadata of Record, Relation, and Page
 
-# Metadata of record,relation and page 
-
+### Record Header
 struct RecordHeader {
     int recordID;
     int offset;
 }; 
+- recordID: Unique identifier for the record.
+- offset: Position of the record within the page.
 
+### Page Header
 struct PageHeader {
     int pageNumber;
     int recordCount;
 };
+- pageNumber: Identifier for the page.
+- recordCount: Number of records currently stored in the page.
 
+### File Header
 struct FileHeader {
     int numberOfPages;
-    char typeName[12]; #Because relation names' length limit is 12
+    char typeName[12]; // Because relation names' length limit is 12
 };
+- numberOfPages: Total number of pages in the file.
+- typeName: Name of the relation/type.
 
+## Limitations
 
-# Limitations 
+### Folder Structure for Each Relation
+- Each relation has a folder named after the relation.
+- Inside the folder:
+  - index.py: Contains the index structure (B+ Tree) for managing the records.
+  - page0.dat to page9.dat: Initially, each relation has max 10 pages. Each page can store up to 10 records.
+  - Each folder starts with one page, but pages can be dynamically added as needed.
 
-Each relation has a folder with the same name, in that folder we have 
+### Constraints
+- Number of Fields: Each relation can have up to 10 fields.
+- Field Name Length: Each field name can be up to 20 characters in length.
+- Relation Name Length: Relation names can be up to 12 characters in length.
+- Number of Records per Page: Each page can contain up to 10 records.
 
-* index.py # for index structure 
+## Design Decisions
 
-* page0.txt-page9.txt #initially each relation have 10 pages in their file with each page storing 10 records.
+### B+ Tree for Indexing
+- The B+ Tree is chosen for indexing due to its balanced nature and efficient range queries.
+- Internal nodes contain keys and pointers to child nodes, while leaf nodes contain keys and pointers to records.
+- The tree is dynamically balanced during insertions and deletions to maintain optimal search performance.
 
-* each folder initially have 1 page but it is of varying length with respect to need. 
+### Metadata Management
+- Record Header: Keeps track of the record's unique identifier and its position within the page, facilitating quick access and updates.
+- Page Header: Stores the page number and the count of records in the page, allowing efficient page management and space utilization.
+- File Header: Contains metadata about the number of pages and the relation name, ensuring consistency and easy retrieval of relation-specific information.
 
-* relations have at most 10 fields each field name is of 20 chars length. 
+### File and Page Structure
+- Pages are stored as separate files (page0.dat, page1.dat, etc.) within the relation's folder.
+- Each page can dynamically grow as new records are added, initially starting with one page.
+- The structure supports up to 10 pages per relation by default, with the capacity for expansion.
 
-* relation names up to 12 chars length is supported.
+### Handling Constraints
+- Relation names are limited to 12 characters to ensure compatibility with the file system and maintain simplicity.
+- Field names are restricted to 20 characters to avoid excessive metadata overhead and ensure efficient storage and retrieval.
 
+## Implementation Details
 
+### Indexing with B+ Tree
+- The B+ Tree implementation ensures that insertions, deletions, and searches are performed in logarithmic time.
+- The tree is persisted using Python's pickle module, allowing the index to be saved and loaded efficiently.
+- Splits and merges in the tree are handled to maintain balance and ensure that the tree remains optimally structured.
+
+### Record Management
+- Records are stored in pages, with each page capable of holding up to 10 records.
+- Pages are dynamically created and managed to accommodate the growing number of records.
+- The RecordHeader ensures that records can be quickly located within the page, and the PageHeader maintains the overall page structure.
+
+### Dynamic Page Allocation
+- The system starts with one page per relation but can dynamically allocate additional pages as needed.
+- Each page file (pageX.dat) can store up to 10 records, and additional pages are created when the existing pages are full.
+- This dynamic allocation ensures efficient use of storage space and allows for scalability as the dataset grows.
